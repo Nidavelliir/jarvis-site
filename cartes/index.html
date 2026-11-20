@@ -461,6 +461,10 @@ function catSet(id){ return CAT&&CAT.sets[id]||null; }
 function catCards(id){
   if(CC[id]) return CC[id]; const st=catSet(id); if(!st) return null;
   const list=st.c.map(a=>({n:a[0],k:keyOf(a[0]),nom:a[1],type:CAT.types[a[2]]||"",rar:CAT.rar[a[3]]||"",o:a[4],l:a[5],p:a[6],ph:a[7],m:a[8]||0,cm:a[9]||0,orig:a[10]||"",en:a[11]||0}));
+  /* Fiche Cardmarket partagée par plusieurs cartes (ex. version normale et illustration spéciale) : seule la
+     première carte la garde ; pour les autres, le prix serait faux, donc ni prix ni lien direct */
+  const vus=new Set();
+  for(const x of list){ if(!x.cm) continue; if(vus.has(x.cm)){ x.douteux=true; x.cm=0; x.p=null; x.ph=null; } else vus.add(x.cm); }
   return CC[id]={list,map:new Map(list.map(x=>[x.k,x]))};
 }
 function catCard(id,k){ const c=catCards(id); return c?c.map.get(k)||null:null; }
@@ -468,7 +472,7 @@ function catCard(id,k){ const c=catCards(id); return c?c.map.get(k)||null:null; 
 function cmUrl(cid,k){ const x=cid?catCard(cid,k):null; if(!x) return "";
   const g=jeuSet(cid)==="lorcana"?"Lorcana":"Pokemon";
   if(x.cm) return `https://www.cardmarket.com/fr/${g}/Products?idProduct=`+x.cm;
-  return `https://www.cardmarket.com/fr/${g}/Products/Search?searchString=`+encodeURIComponent(x.nom); }
+  return `https://www.cardmarket.com/fr/${g}/Products/Search?searchString=`+encodeURIComponent(x.nom+(x.douteux?" "+x.n:"")); }
 function prLink(cid,k,text,cls="pr"){ const u=cmUrl(cid,k); return u?`<a class="${cls}" href="${esc(u)}" target="_blank" rel="noopener">${text}</a>`:`<span class="${cls}">${text}</span>`; }
 /* Versions qui existent pour cette carte (normale / reverse / holo), + celles déjà possédées */
 const VBIT={normale:1,reverse:2,holo:4};
@@ -487,8 +491,9 @@ function packUrl(id,o,l){
 function cardImg(id,c){ return c&&c.o>=0 ? packUrl(id,c.o,c.l) : ""; }
 function logoUrl(id){ const st=catSet(id); return st&&st.logo ? packUrl("logos",st.logo[0],st.logo[1]) : ""; }
 function prixOf(setId,k){
+  const c=catCard(setId,k); if(c&&c.douteux) return null;  /* carte pas référencée correctement : pas de prix */
   const d=PRIX[setId]; if(d&&d.p&&d.p[k]) return d.p[k];
-  const c=catCard(setId,k); return c&&(c.p!=null||c.ph!=null)?[c.p,c.ph]:null;
+  return c&&(c.p!=null||c.ph!=null)?[c.p,c.ph]:null;
 }
 function prixDate(setId){ const d=PRIX[setId]; const st=catSet(setId); const iso=(d&&d.maj)||(st&&st.pm)||(CAT&&CAT.prixMaj); if(!iso) return ""; try{ return new Date(iso).toLocaleDateString("fr-FR",{day:"numeric",month:"long"}); }catch(e){ return ""; } }
 function unitPrice(setId,k,variant){ const p=prixOf(setId,k); if(!p) return null; const [n,h]=p;
