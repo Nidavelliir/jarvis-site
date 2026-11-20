@@ -685,7 +685,7 @@ function tileCard(c,total,cid,offi){
   const bg = t?`background:linear-gradient(160deg,${t.c2},${t.c})`:"";
   const cx = cid ? (c._cat||catCard(cid,c._id)) : null;
   const ci = cid ? cardImg(cid,cx) : "";
-  const myPhoto = own && c.photoId && (!ci || (cx&&cx.en));
+  const myPhoto = own && c.photoId && !ci;
   let art;
   if(myPhoto) art=`<img src="${blobUrl(c.photoId)}" loading="lazy" alt="">`;
   else if(ci) art=`<img src="${ci}" loading="lazy" alt="">${cx&&cx.en?`<span class="envo">EN</span>`:""}`;
@@ -1455,9 +1455,9 @@ function boosterBanner(){
 function bindBoosterBanner(){ const a=$("#bScan"), b=$("#bEnd"); if(a) a.onclick=()=>startScan(); if(b) b.onclick=sheetBoosterEnd; }
 function sheetBoosterStart(){
   if(S.boost){ sheetBoosterEnd(); return; }
-  openSheet(`<h3>Ouvrir un booster</h3><div class="sub">Scanne les cartes du booster une par une : elles sont ajoutées à ta collection et l'appli calcule la valeur du booster. Le scan à la chaîne est activé pendant l'ouverture. À la fin, touche « Terminer » pour l'enregistrer dans ton historique.</div>
+  openSheet(`<h3>Ouvrir un booster</h3><div class="sub">Ajoute les cartes du booster une par une en tapant leur numéro : elles vont dans ta collection et l'appli calcule la valeur du booster. À la fin, touche « Terminer » pour l'enregistrer dans ton historique.</div>
     <label class="fld"><span>Nom (facultatif)</span><input id="boNom" placeholder="Ex. Booster Nuit Noire, display du 19/11…"></label>
-    <button class="btn pri" id="boGo">${IC.cam} Commencer et scanner la 1re carte</button>`, sh=>{
+    <button class="btn pri" id="boGo">${IC.plus} Commencer et ajouter la 1re carte</button>`, sh=>{
     $("#boGo",sh).onclick=async()=>{
       const nom=$("#boNom",sh).value.trim();
       const d={actif:true,debut:Date.now(),nom,cartes:[],chainAvant:!!S.chain};
@@ -1482,11 +1482,11 @@ async function sheetBoosterEnd(){
   const sets=[...new Set(b.cartes.map(c=>c.cid))]; await Promise.all(sets.map(loadPack));
   const tot=boostTotal(b);
   openSheet(`<h3>${esc(b.nom||"Booster en cours")}</h3><div class="sub">${b.cartes.length} carte${b.cartes.length>1?"s":""} scannée${b.cartes.length>1?"s":""} · valeur <b style="color:var(--gold2)">${eur(tot)||"0,00 €"}</b></div>
-    ${b.cartes.length?boostRows([...b.cartes].sort((x,y)=>(y.prix||0)-(x.prix||0))):`<p class="hint">Aucune carte scannée pour l'instant.</p>`}
+    ${b.cartes.length?boostRows([...b.cartes].sort((x,y)=>(y.prix||0)-(x.prix||0))):`<p class="hint">Aucune carte ajoutée pour l'instant.</p>`}
     <label class="fld"><span>Prix payé pour ce booster (facultatif)</span><input id="boPaye" type="number" inputmode="decimal" step="0.01" min="0" placeholder="Ex. 5,50"></label>
     <div id="boGain"></div>
     <button class="btn pri" id="boSave">Terminer et enregistrer</button>
-    <button class="btn sec" id="boMore">${IC.cam} Scanner une autre carte</button>
+    <button class="btn sec" id="boMore">${IC.plus} Ajouter une autre carte</button>
     <button class="btn dng" id="boCancel">Abandonner ce booster</button>
     <p class="hint">Abandonner ne retire pas les cartes de ta collection, seulement le suivi du booster.</p>`, sh=>{
     const inp=$("#boPaye",sh);
